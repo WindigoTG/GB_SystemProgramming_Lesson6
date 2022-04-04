@@ -6,6 +6,8 @@ Shader "Custom/UnlitTextureMix"
         _Tex2("Texture2", 2D) = "white" {} // текстура2
         _MixValue("Mix Value", Range(0,1)) = 0.5 // параметр смешивания текстур
         _Color("Main Color", COLOR) = (1,1,1,1) // цвет окрашивания
+        _Height("Height", float) = 0.5 // сила изгиба
+
     }
 
     SubShader
@@ -26,6 +28,7 @@ Shader "Custom/UnlitTextureMix"
             float4 _Tex2_ST;
             float _MixValue; // параметр смешивания
             float4 _Color; //цвет, которым будет окрашиваться изображение
+            float _Height; // сила изгиба
 
             struct v2f
             {
@@ -36,6 +39,15 @@ Shader "Custom/UnlitTextureMix"
             v2f vert(appdata_full v)
             {
                 v2f result;
+
+                //v.vertex.y += _Height;
+                //v.vertex.xyz += v.normal * _Height;
+                //v.vertex.xyz += v.normal * _Height * v.texcoord.x;
+                //v.vertex.xyz += v.normal * _Height * v.texcoord.x * v.texcoord.x - v.normal * _Height * v.texcoord.x;
+                //v.vertex.xyz += v.normal * _Height * v.texcoord.x - v.normal * _Height * v.texcoord.x * v.texcoord.x;
+
+                v.vertex.xyz += v.normal * _Height * (v.texcoord.x  - 0.5) * (v.texcoord.x - 0.5);
+
                 result.vertex = UnityObjectToClipPos(v.vertex);
                 result.uv = TRANSFORM_TEX(v.texcoord, _Tex1);
                 return result;
@@ -44,8 +56,8 @@ Shader "Custom/UnlitTextureMix"
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 color;
-                color = tex2D(_Tex1, i.uv) * _MixValue;
-                color += tex2D(_Tex2, i.uv) * (1 - _MixValue);
+                color = tex2D(_Tex2, i.uv) * _MixValue;
+                color += tex2D(_Tex1, i.uv) * (1 - _MixValue);
                 color = color * _Color;
                 return color;
             }
@@ -54,5 +66,4 @@ Shader "Custom/UnlitTextureMix"
             ENDCG
         }
     }
-
 }
